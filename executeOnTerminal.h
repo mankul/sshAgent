@@ -1,5 +1,7 @@
 
 #ifndef EXECUTECOMMAND
 #define EXECUTECOMMAND
-void execute_command(const char * command);
+#include<iostream>
+#include<string>
+std::string execute_command(const char * command);
 #endif

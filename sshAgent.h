@@ -10,4 +10,4 @@ class SshAgent{
 	~SshAgent();
 	std::string getPathToSocket();
 };
-#endif SSHAGENT
+#endif

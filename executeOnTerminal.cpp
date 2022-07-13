@@ -1,11 +1,10 @@
-#include<iostream>
 #include<string>
 #include"executeOnTerminal.h"
 using namespace std;
 
 
 
-void execute_command(const char * command){
+std::string execute_command(const char * command){
 
 	char buffer[128];
 	std::string result = "";
@@ -22,8 +21,10 @@ void execute_command(const char * command){
 		pclose(pipe);
 	}
 
-	std::cout<<result;
 	pclose(pipe);
+	if(result[result.length()] == '\n')
+		result[result.length()] = '\0';
+	return result;
 }
 
 /*
