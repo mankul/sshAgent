@@ -12,5 +12,7 @@ int main(){
 	char * path = new char[pathToSSHAgent.length()];
 	strcpy(path, pathToSSHAgent.c_str());
 	connectionToAgent.connectBySocket( path );
+	const char * streamKey = "private key for ssh ";
+	connectionToAgent.sendSSHContentToAgent(streamKey);
 	return 0;
 }

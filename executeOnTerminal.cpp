@@ -22,8 +22,8 @@ std::string execute_command(const char * command){
 	}
 
 	pclose(pipe);
-	if(result[result.length()] == '\n')
-		result[result.length()] = '\0';
+	if(result[result.length()-1] == '\n')
+		result[result.length()-1] = '\0';
 	return result;
 }
 

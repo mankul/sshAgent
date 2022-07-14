@@ -8,13 +8,18 @@
 
 class ConnectToAgent{
 
+
+	private:
+		int socketFd;
+		int clientSocketFd;
+		struct sockaddr_un * sock_addr;
 	public:
 	ConnectToAgent();
 	~ConnectToAgent();
 
 	void connectBySocket( char * sockAddr);
-
-
+	void sendSSHContentToAgent(const char * stream);
+	void closeConnection();
 };
 
 
