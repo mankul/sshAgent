@@ -11,8 +11,8 @@ int main(){
 	std::cout<<pathToSSHAgent<<std::endl;
 	char * path = new char[pathToSSHAgent.length()];
 	strcpy(path, pathToSSHAgent.c_str());
-	connectionToAgent.connectBySocket( path );
+	connectionToAgent.connectSocket( path );
 	const char * streamKey = "private key for ssh ";
-	connectionToAgent.sendSSHContentToAgent(streamKey);
+	connectionToAgent.getAddedIdentities();
 	return 0;
 }
