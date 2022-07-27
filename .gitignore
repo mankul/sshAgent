@@ -1,8 +1,9 @@
 *.out
+*.out*
 *.o
 *.sock
 *.log
-.vscode/
+.vscode*
 .vscode/configurationCache.log
 .vscode/targets.log
 

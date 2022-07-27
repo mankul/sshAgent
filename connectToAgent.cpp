@@ -7,6 +7,7 @@
 
 
 #define CLIENT_SOCKET "client.sock"
+
 #define BUFFER_SIZE 1024
 ConnectToAgent::ConnectToAgent(){
 	std::cout<<"initialized the class connect to agent"<<std::endl;
@@ -30,7 +31,7 @@ bool ConnectToAgent::getAddedIdentities(){
 bool ConnectToAgent::writeInt8ToAgent(int8 en){
 	std::cout<<"ConnectToAgent::writeInt8ToAgent message is "<<unsigned (en)<< " size is "<<sizeof(en)<<std::endl;
 	// message = reinterpret_cast<char *>(&en);
-	const char * message = reinterpret_cast<const char *> (&en);
+	char * message = (char *) (&en);
 	// std::cout<<"message turned "<<message<<" "<<strlen(message)<<std::endl;
 
 	// while(*message != '\0'){
@@ -42,7 +43,7 @@ bool ConnectToAgent::writeInt8ToAgent(int8 en){
 }
 
 
-void ConnectToAgent::writeContentToSSASocket(const char * stream){
+void ConnectToAgent::writeContentToSSASocket(char * stream){
 	
 	char buffer [BUFFER_SIZE];
 	std::cout<<"ConnectToAgent::writeContentToSSASocket "<<stream<<std::endl;
