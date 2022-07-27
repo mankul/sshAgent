@@ -3,6 +3,11 @@
 #include<iostream>
 #include<stdio.h>
 
+
+
+
+#define CLIENT_SOCKET "client.sock"
+#define BUFFER_SIZE 1024
 ConnectToAgent::ConnectToAgent(){
 	std::cout<<"initialized the class connect to agent"<<std::endl;
 }
@@ -15,32 +20,35 @@ ConnectToAgent::~ConnectToAgent(){
 
 bool ConnectToAgent::getAddedIdentities(){
 	std::cout<<"connectToAgent::getAddedIdentities "<<std::endl;
+	std::cout<<unsigned(SSH_AGENTC_REQUEST_IDENTITIES)<<std::endl;
 	writeInt8ToAgent(SSH_AGENTC_REQUEST_IDENTITIES);	
 	return true;
 }
 
 
 
-bool ConnectToAgent::writeInt8ToAgent(uint8_t en){
-	std::cout<<"ConnectToAgent::writeInt8ToAgent message is "<<(int)en<<std::endl;
+bool ConnectToAgent::writeInt8ToAgent(int8 en){
+	std::cout<<"ConnectToAgent::writeInt8ToAgent message is "<<unsigned (en)<< " size is "<<sizeof(en)<<std::endl;
 	// message = reinterpret_cast<char *>(&en);
-	char * message = reinterpret_cast<char *> (&en);
-	std::cout<<"message turned "<<message<<strlen(message)<<std::endl;
+	const char * message = reinterpret_cast<const char *> (&en);
+	// std::cout<<"message turned "<<message<<" "<<strlen(message)<<std::endl;
+
+	// while(*message != '\0'){
+	// 	std::cout<<" -- "<<*message<<"\n";
+	// 	message++;
+	// 	}
 	writeContentToSSASocket(message);
 	return true;
 }
 
 
-void ConnectToAgent::writeContentToSSASocket(char * stream){
+void ConnectToAgent::writeContentToSSASocket(const char * stream){
 	
-	char buffer [1024];
+	char buffer [BUFFER_SIZE];
 	std::cout<<"ConnectToAgent::writeContentToSSASocket "<<stream<<std::endl;
-	//send(socketFd, stream, strlen(stream), 0);
-	bzero(buffer, sizeof(buffer));
+	bzero(buffer, BUFFER_SIZE);
 
-	// strncpy(buffer, stream, sizeof(buffer)-1) );
-	strncpy(buffer, stream, sizeof stream);
-	buffer[sizeof stream ] = '\0';
+	strncpy(buffer, stream, strlen(stream) );
 
 	std::cout<<buffer<<std::endl;
 
@@ -51,38 +59,58 @@ void ConnectToAgent::writeContentToSSASocket(char * stream){
 	{
 		std::cout<<"bug in writing to socket"<<std::endl;
 	}
-	bzero(buffer,sizeof(buffer));
+	bzero(buffer,BUFFER_SIZE);
 	
 	int valRead ;
-	while( valRead = read(socketFd, buffer, sizeof buffer - 1) > 0 )
+	while( valRead = read(socketFd, buffer, BUFFER_SIZE - 1) > 0 )
 		std::cout<<"response from ssh agent "<< valRead << " and response "<< buffer<<std::endl;
 }
 
-void ConnectToAgent::connectSocket(char * sockAddr){
-	
+bool ConnectToAgent::connectSocket(const char * sockAddr){
+	int r = 1;
+	struct sockaddr_un sock_addr;
+	std::cout<<"ConnectToAgent::connectSocket. Path of socket is "<<sockAddr<<std::endl;	
 	socketFd = socket(AF_UNIX, SOCK_STREAM, 0);
-	sock_addr = new sockaddr_un();
-	if(socketFd < 1)
-		std::cout<<"error connecting to server"<<std::endl;
+	if(socketFd < 1){
+		std::cout<<"error creating client FD"<<std::endl;
+		r = 0;
+	}
 	else
 		std::cout<<"Connecting socket file descriptor "<<socketFd<<std::endl;
 	
-	bzero((char *)sock_addr, sizeof(sock_addr) );
-
-
-	sock_addr->sun_family = AF_UNIX;
-	strcpy(sock_addr->sun_path, sockAddr);
 	
-	char buffer[128];
-	bzero(buffer , sizeof(buffer));
-	int servLen = sizeof(sock_addr->sun_path) + sizeof(sock_addr->sun_family);	
-	int clientSocketFd = connect(socketFd, (struct sockaddr *) sock_addr, servLen );
-	if(clientSocketFd < 0)
-		std::cout<<"error in connecting to ssh agent server"<<std::endl;
-	else
-		std::cout<<"connected to ssh agent server "<<clientSocketFd<<std::endl;
+	if(r){
+		bzero((char *)&sock_addr, sizeof(sock_addr) );
+		
+		// bzero(sock_addr, sizeof(sock_addr) );
+		sock_addr.sun_family = AF_UNIX;
+		strcpy(sock_addr.sun_path , CLIENT_SOCKET);
+		std::cout<<sock_addr.sun_path<<" "<<sock_addr.sun_family<<std::endl;
+		unlink(CLIENT_SOCKET);
+		if(bind(socketFd, (struct sockaddr *)&sock_addr, sizeof(sock_addr) )< 0 ){
+			r = 0;
+			std::cout<<"Could not bind with local client path"<<std::endl;
+		}
+	}
 
+	if(r){
+		// bzero((char *)sock_addr, sizeof(sock_addr) );
+		bzero(&sock_addr, sizeof(sock_addr) );
+		sock_addr.sun_family = AF_UNIX;
+		strcpy(sock_addr.sun_path , sockAddr);
+		
+		std::cout<<"path is "<<sock_addr.sun_path<<std::endl;
+		std::cout<<"sun family is "<<sock_addr.sun_family<<std::endl;	
 
+		clientSocketFd = connect(socketFd, (struct sockaddr *)& sock_addr, sizeof(sock_addr) );
+		if(clientSocketFd < 0){
+			r = 0;
+			std::cout<<"error in connecting to ssh agent server"<<std::endl;
+		}
+		else
+			std::cout<<"connected to ssh agent server "<<clientSocketFd<<std::endl;
+	}
+	return r;
 }
 
 void ConnectToAgent::closeConnection(){

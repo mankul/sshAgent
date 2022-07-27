@@ -7,6 +7,8 @@
 #include<sys/un.h>
 #include<cstdint>
 
+typedef const unsigned char int8;
+
 
 class ConnectToAgent{
 
@@ -14,19 +16,18 @@ class ConnectToAgent{
 	private:
 		int socketFd;
 		int clientSocketFd;
-		struct sockaddr_un * sock_addr;
 
-		const uint8_t SSH_AGENT_FAILURE = 5;
-		const uint8_t SSH_AGENT_SUCCESS = 6;
-		const uint8_t SSH_AGENTC_REQUEST_IDENTITIES = 128;//11;
-		const uint8_t SSH_AGENT_IDENTITIES_ANSWER = 12;
-		const uint8_t SSH_AGENTC_ADD_IDENTITY = 17;
-		const uint8_t SSH_AGENTC_REMOVE_IDENTITY = 18;
-		const uint8_t SSH_AGENTC_ADD_ID_CONSTRAINED = 25;
+		int8 SSH_AGENT_FAILURE = 5;
+		int8 SSH_AGENT_SUCCESS = 6;
+		int8 SSH_AGENTC_REQUEST_IDENTITIES = 11;
+		int8 SSH_AGENT_IDENTITIES_ANSWER = 12;
+		int8 SSH_AGENTC_ADD_IDENTITY = 17;
+		int8 SSH_AGENTC_REMOVE_IDENTITY = 18;
+		int8 SSH_AGENTC_ADD_ID_CONSTRAINED = 25;
 
-		const uint8_t SSH_AGENT_CONSTRAIN_LIFETIME = 1;
-		const uint8_t SSH_AGENT_CONSTRAIN_CONFIRM = 2;
-		const uint8_t SSH_AGENT_CONSTRAIN_EXTENSION = 255;	
+		int8 SSH_AGENT_CONSTRAIN_LIFETIME = 1;
+		int8 SSH_AGENT_CONSTRAIN_CONFIRM = 2;
+		int8 SSH_AGENT_CONSTRAIN_EXTENSION = 255;	
 	
 	
 	
@@ -34,10 +35,10 @@ class ConnectToAgent{
 		ConnectToAgent();
 		~ConnectToAgent();
 
-		bool writeInt8ToAgent(uint8_t en);
+		bool writeInt8ToAgent(int8 en);
 		bool getAddedIdentities();
-		void connectSocket( char * sockAddr);
-		void writeContentToSSASocket(char * stream);
+		bool connectSocket( const char * sockAddr);
+		void writeContentToSSASocket(const char * stream);
 		void closeConnection();
 };
 
