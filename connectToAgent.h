@@ -38,7 +38,7 @@ class ConnectToAgent{
 		bool writeInt8ToAgent(int8 en);
 		bool getAddedIdentities();
 		bool connectSocket( const char * sockAddr);
-		void writeContentToSSASocket(char * stream);
+		void writeContentToSSASocket(const char * stream);
 		void closeConnection();
 };
 

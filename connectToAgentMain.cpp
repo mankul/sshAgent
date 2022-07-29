@@ -8,7 +8,7 @@ int main(){
 
 	ConnectToAgent connectionToAgent;
 	char * sshAgentPath = "echo $SSH_AUTH_SOCK";
-	bool localServer = true;
+	bool localServer = false;
 	bool r = 1;
 	if(localServer)
 	{

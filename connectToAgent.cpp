@@ -8,7 +8,8 @@
 
 #define CLIENT_SOCKET "client.sock"
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 4096
+
 ConnectToAgent::ConnectToAgent(){
 	std::cout<<"initialized the class connect to agent"<<std::endl;
 }
@@ -30,21 +31,13 @@ bool ConnectToAgent::getAddedIdentities(){
 
 bool ConnectToAgent::writeInt8ToAgent(int8 en){
 	std::cout<<"ConnectToAgent::writeInt8ToAgent message is "<<unsigned (en)<< " size is "<<sizeof(en)<<std::endl;
-	// message = reinterpret_cast<char *>(&en);
-	char * message = (char *) (&en);
-	// std::cout<<"message turned "<<message<<" "<<strlen(message)<<std::endl;
-
-	// while(*message != '\0'){
-	// 	std::cout<<" -- "<<*message<<"\n";
-	// 	message++;
-	// 	}
+	const char * message = reinterpret_cast<const char *>(&en);
 	writeContentToSSASocket(message);
 	return true;
 }
 
 
-void ConnectToAgent::writeContentToSSASocket(char * stream){
-	
+void ConnectToAgent::writeContentToSSASocket(const char * stream){	
 	char buffer [BUFFER_SIZE];
 	std::cout<<"ConnectToAgent::writeContentToSSASocket "<<stream<<std::endl;
 	bzero(buffer, BUFFER_SIZE);
@@ -63,8 +56,10 @@ void ConnectToAgent::writeContentToSSASocket(char * stream){
 	bzero(buffer,BUFFER_SIZE);
 	
 	int valRead ;
-	while( valRead = read(socketFd, buffer, BUFFER_SIZE - 1) > 0 )
+	do{
+		valRead = read(socketFd, buffer, BUFFER_SIZE );
 		std::cout<<"response from ssh agent "<< valRead << " and response "<< buffer<<std::endl;
+	}while(valRead >=0);
 }
 
 bool ConnectToAgent::connectSocket(const char * sockAddr){
