@@ -10,6 +10,13 @@
 
 #define BUFFER_SIZE 4096
 
+
+struct sshMessage{
+	char * message;
+};
+
+
+
 ConnectToAgent::ConnectToAgent(){
 	std::cout<<"initialized the class connect to agent"<<std::endl;
 }
@@ -27,41 +34,68 @@ bool ConnectToAgent::getAddedIdentities(){
 	return true;
 }
 
-
-
-bool ConnectToAgent::writeInt8ToAgent(int8 en){
-	std::cout<<"ConnectToAgent::writeInt8ToAgent message is "<<unsigned (en)<< " size is "<<sizeof(en)<<std::endl;
-	const char * message = reinterpret_cast<const char *>(&en);
-	writeContentToSSASocket(message);
+bool ConnectToAgent::removeAllAddedIdentities(){
+		
+	std::cout<<"connectToAgent::RemoveAllAddedIdentities "<<std::endl;
+	std::cout<<unsigned(SSH_AGENTC_REMOVE_ALL_IDENTITIES)<<std::endl;
+	writeInt8ToAgent(SSH_AGENTC_REQUEST_IDENTITIES);	
 	return true;
 }
 
-
-void ConnectToAgent::writeContentToSSASocket(const char * stream){	
-	char buffer [BUFFER_SIZE];
-	std::cout<<"ConnectToAgent::writeContentToSSASocket "<<stream<<std::endl;
-	bzero(buffer, BUFFER_SIZE);
-
-	strncpy(buffer, stream, strlen(stream) );
-
-	std::cout<<buffer<<std::endl;
-
-	int n =  write(socketFd, buffer, strlen(buffer));
-	std::cout<<"ConnectToAgent::writeContentToSSASocket content written "<<stream<<std::endl;
-
-	if(n < 0)
-	{
-		std::cout<<"bug in writing to socket"<<std::endl;
-	}
-	bzero(buffer,BUFFER_SIZE);
+ 	
+ 	
+ 
+bool ConnectToAgent::writeInt8ToAgent(int8 en){
+	int dataTypeSize = sizeof(1);
+		const char * message = reinterpret_cast<const char *>(&en);
+	const char * messageLength = reinterpret_cast<const char *>(&dataTypeSize);
 	
-	int valRead ;
-	do{
-		valRead = read(socketFd, buffer, BUFFER_SIZE );
-		std::cout<<"response from ssh agent "<< valRead << " and response "<< buffer<<std::endl;
-	}while(valRead >=0);
+	int totalMessageLength = sizeof(int) + sizeof(int8);
+	char * p = (char *)malloc(totalMessageLength + 1);
+	strcpy(&p[0],messageLength );
+	strcpy(&p[4],message);
+	
+	std::cout<<"ConnectToAgent::writeInt8ToAgent message is "<<unsigned (en)<< " size is "<<sizeof(en)<<"total message length "<<totalMessageLength<<"total message "<<p<<std::endl;
+
+	// bzero(p, )
+
+	int ack = writeContentToSSASocket(p, totalMessageLength);
+	if(ack){
+		std::cout<<"acknowledgement is "<<ack<<std::endl;
+		readFromSSASocket();
+	}
+
 }
 
+
+
+
+char * ConnectToAgent::readFromSSASocket(){
+
+	int valRead ;
+	char buffer [BUFFER_SIZE];
+	bzero(buffer,BUFFER_SIZE);
+	int sizeOfOffset = sizeof(int8);
+	valRead = read(socketFd, buffer, sizeOfOffset);
+	// do{
+		// valRead = read(socketFd, buffer, BUFFER_SIZE );
+	std::cout<<"response from ssh agent "<< valRead << " and response "<< buffer<<std::endl;
+	// }while(valRead >=0);
+// else
+	// std::cout<<"not read from  socket"<<std::endl;
+	return buffer;
+}
+
+
+int ConnectToAgent::writeContentToSSASocket(char * stream, int sizeOfStream){	
+	int ack ;
+	ack =  write(socketFd, stream, sizeOfStream);//buffer, strlen(buffer));
+	if(ack >= 0)
+		std::cout<<"ConnectToAgent::writeContentToSSASocket content written "<<stream<<std::endl;	
+	return ack;
+
+	
+}
 bool ConnectToAgent::connectSocket(const char * sockAddr){
 	int r = 1;
 	struct sockaddr_un sock_addr;

@@ -24,7 +24,9 @@ int main(){
 	}
 	if(r){
 		const char * streamKey = "private key for ssh ";
-		connectionToAgent.getAddedIdentities();
+		// connectionToAgent.getAddedIdentities();
+		connectionToAgent.removeAllAddedIdentities();
+		
 	}
 	return 0;
 }
