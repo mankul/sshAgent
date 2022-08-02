@@ -19,6 +19,7 @@ class ConnectToAgent{
 
 		int8 SSH_AGENT_FAILURE = 5;
 		int8 SSH_AGENT_SUCCESS = 6;
+		int8 SSH_AGENTC_REMOVE_ALL_RSA_IDENTITIES = 9;
 		int8 SSH_AGENTC_REQUEST_IDENTITIES = 11;
 		int8 SSH_AGENT_IDENTITIES_ANSWER = 12;
 		int8 SSH_AGENTC_ADD_IDENTITY = 17;
@@ -39,6 +40,7 @@ class ConnectToAgent{
 		bool writeInt8ToAgent(int8 en);
 		bool getAddedIdentities();
 		bool removeAllAddedIdentities();
+		bool removeAllRSAAddedIdentities();
 		bool connectSocket( const char * sockAddr);
 		int writeContentToSSASocket(char * stream, int sizeOfStream);
 		char * readFromSSASocket();

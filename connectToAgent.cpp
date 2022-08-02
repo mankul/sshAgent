@@ -34,11 +34,22 @@ bool ConnectToAgent::getAddedIdentities(){
 	return true;
 }
 
+
+bool ConnectToAgent::removeAllRSAAddedIdentities(){
+		
+	std::cout<<"connectToAgent::RemoveAllAddedIdentities "<<std::endl;
+	std::cout<<unsigned(SSH_AGENTC_REMOVE_ALL_IDENTITIES)<<std::endl;
+	writeInt8ToAgent(SSH_AGENTC_REMOVE_ALL_RSA_IDENTITIES);	
+	return true;
+}
+
+
+
 bool ConnectToAgent::removeAllAddedIdentities(){
 		
 	std::cout<<"connectToAgent::RemoveAllAddedIdentities "<<std::endl;
 	std::cout<<unsigned(SSH_AGENTC_REMOVE_ALL_IDENTITIES)<<std::endl;
-	writeInt8ToAgent(SSH_AGENTC_REQUEST_IDENTITIES);	
+	writeInt8ToAgent(SSH_AGENTC_REMOVE_ALL_IDENTITIES);	
 	return true;
 }
 
@@ -46,25 +57,40 @@ bool ConnectToAgent::removeAllAddedIdentities(){
  	
  
 bool ConnectToAgent::writeInt8ToAgent(int8 en){
-	int dataTypeSize = sizeof(1);
-		const char * message = reinterpret_cast<const char *>(&en);
+	int dataTypeSize = sizeof(en);
+	const char * message = reinterpret_cast<const char *>(&en);
 	const char * messageLength = reinterpret_cast<const char *>(&dataTypeSize);
 	
-	int totalMessageLength = sizeof(int) + sizeof(int8);
-	char * p = (char *)malloc(totalMessageLength + 1);
-	strcpy(&p[0],messageLength );
-	strcpy(&p[4],message);
+	int totalMessageLength = sizeof(int);
+	char * p = (char *)malloc(totalMessageLength);
 	
-	std::cout<<"ConnectToAgent::writeInt8ToAgent message is "<<unsigned (en)<< " size is "<<sizeof(en)<<"total message length "<<totalMessageLength<<"total message "<<p<<std::endl;
+	strcpy(&p[0],messageLength );
+	int ack = writeContentToSSASocket( (char *)message, totalMessageLength);
 
-	// bzero(p, )
+	if(ack)	{
+		std::cout<<"ConnectToAgent::writeInt8ToAgent message is "<<messageLength<<" total message length "<<totalMessageLength<<std::endl;
+		free(p);
 
-	int ack = writeContentToSSASocket(p, totalMessageLength);
-	if(ack){
-		std::cout<<"acknowledgement is "<<ack<<std::endl;
-		readFromSSASocket();
+		totalMessageLength = sizeof(int8);
+		p = (char *)malloc(sizeof(totalMessageLength));
+		strcpy(&p[0],message);
+		
+
+		ack = writeContentToSSASocket( (char *)message, totalMessageLength);
+		
+		
+		if(ack)
+			std::cout<<"ConnectToAgent::writeInt8ToAgent message is "<<message<<" total message length "<<totalMessageLength<<std::endl;
+		else
+			std::cout<<"error in writing message to ssh-agent server"<<std::endl;
+		
 	}
+	else
+		std::cout<<"error in writing message-length to ssh-agent server"<<std::endl;
+	
 
+	free(p);
+	return ack;
 }
 
 
@@ -79,6 +105,7 @@ char * ConnectToAgent::readFromSSASocket(){
 	valRead = read(socketFd, buffer, sizeOfOffset);
 	// do{
 		// valRead = read(socketFd, buffer, BUFFER_SIZE );
+	if(valRead)
 	std::cout<<"response from ssh agent "<< valRead << " and response "<< buffer<<std::endl;
 	// }while(valRead >=0);
 // else
@@ -89,7 +116,8 @@ char * ConnectToAgent::readFromSSASocket(){
 
 int ConnectToAgent::writeContentToSSASocket(char * stream, int sizeOfStream){	
 	int ack ;
-	ack =  write(socketFd, stream, sizeOfStream);//buffer, strlen(buffer));
+	// ack =  write(socketFd, stream, sizeOfStream);//buffer, strlen(buffer));
+	ack = send(socketFd, stream, sizeOfStream, 0);
 	if(ack >= 0)
 		std::cout<<"ConnectToAgent::writeContentToSSASocket content written "<<stream<<std::endl;	
 	return ack;
