@@ -30,36 +30,67 @@ ConnectToAgent::~ConnectToAgent(){
 bool ConnectToAgent::getAddedIdentities(){
 	std::cout<<"connectToAgent::getAddedIdentities "<<std::endl;
 	std::cout<<unsigned(SSH_AGENTC_REQUEST_IDENTITIES)<<std::endl;
-	writeInt8ToAgent(SSH_AGENTC_REQUEST_IDENTITIES);	
-	return true;
+	bool ack = writeInt8ToAgent(SSH_AGENTC_REQUEST_IDENTITIES);	
+	if(ack){
+		ack = readInt8FromSSASocket();
+		std::cout<<ack<<std::endl;
+		ack = readInt32FromSSASocket();
+		std::cout<<ack<<std::endl;
+	}
+
+	return ack;
 }
 
 
 bool ConnectToAgent::removeAllRSAAddedIdentities(){
-		
-	std::cout<<"connectToAgent::RemoveAllAddedIdentities "<<std::endl;
+	bool ack;
+	std::cout<<"connectToAgent::RemoveAllRSAAddedIdentities ";
 	std::cout<<unsigned(SSH_AGENTC_REMOVE_ALL_IDENTITIES)<<std::endl;
-	writeInt8ToAgent(SSH_AGENTC_REMOVE_ALL_RSA_IDENTITIES);	
-	return true;
+	ack = writeInt8ToAgent(SSH_AGENTC_REMOVE_ALL_RSA_IDENTITIES);	
+	if(ack){
+		ack = readFrom();
+	}
+	return ack;
 }
 
 
 
-bool ConnectToAgent::removeAllAddedIdentities(){
-		
+bool ConnectToAgent::removeAllAddedIdentities(){		
+	bool ack ;
 	std::cout<<"connectToAgent::RemoveAllAddedIdentities "<<std::endl;
 	std::cout<<unsigned(SSH_AGENTC_REMOVE_ALL_IDENTITIES)<<std::endl;
-	writeInt8ToAgent(SSH_AGENTC_REMOVE_ALL_IDENTITIES);	
-	return true;
+	ack = writeInt8ToAgent(SSH_AGENTC_REMOVE_ALL_IDENTITIES);	
+	if(ack){
+		ack = readFrom();
+	}
+	return ack;
 }
 
+
+bool ConnectToAgent::readFrom(){
+	bool ack = readInt8FromSSASocket();
+	std::cout<<ack<<std::endl;
+	ack = readInt32FromSSASocket();
+	std::cout<<ack<<std::endl;
+	return ack;
+}
  	
- 	
- 
 bool ConnectToAgent::writeInt8ToAgent(int8 en){
 	int dataTypeSize = sizeof(en);
 	const char * message = reinterpret_cast<const char *>(&en);
-	const char * messageLength = reinterpret_cast<const char *>(&dataTypeSize);
+	return prepareMessage(dataTypeSize, (char *)message);
+}	
+
+
+bool ConnectToAgent::writeInt32ToAgent(int en){
+	int dataTypeSize = sizeof(en);
+	const char * message = reinterpret_cast<const char *>(&en);
+	return prepareMessage(dataTypeSize, (char *)message);
+}
+
+bool ConnectToAgent::prepareMessage(int dataTypeSize, char * message){
+	// const char * messageLength = reinterpret_cast<const char *>(&dataTypeSize);
+	const char * messageLength = (const char *)(&dataTypeSize);
 	
 	int totalMessageLength = sizeof(int);
 	char * p = (char *)malloc(totalMessageLength);
@@ -75,9 +106,7 @@ bool ConnectToAgent::writeInt8ToAgent(int8 en){
 		p = (char *)malloc(sizeof(totalMessageLength));
 		strcpy(&p[0],message);
 		
-
 		ack = writeContentToSSASocket( (char *)message, totalMessageLength);
-		
 		
 		if(ack)
 			std::cout<<"ConnectToAgent::writeInt8ToAgent message is "<<message<<" total message length "<<totalMessageLength<<std::endl;
@@ -93,23 +122,31 @@ bool ConnectToAgent::writeInt8ToAgent(int8 en){
 	return ack;
 }
 
+ 
+
+char * ConnectToAgent::readInt8FromSSASocket(){
+	int sizeOfMessage = sizeof(int8);
+	return readFromSSASocket(sizeOfMessage);
+}
 
 
+char * ConnectToAgent::readInt32FromSSASocket(){
+	int sizeOfMessage = sizeof(int);
+	return readFromSSASocket(sizeOfMessage);
+}
 
-char * ConnectToAgent::readFromSSASocket(){
-
-	int valRead ;
-	char buffer [BUFFER_SIZE];
-	bzero(buffer,BUFFER_SIZE);
-	int sizeOfOffset = sizeof(int8);
-	valRead = read(socketFd, buffer, sizeOfOffset);
-	// do{
-		// valRead = read(socketFd, buffer, BUFFER_SIZE );
-	if(valRead)
-	std::cout<<"response from ssh agent "<< valRead << " and response "<< buffer<<std::endl;
-	// }while(valRead >=0);
-// else
-	// std::cout<<"not read from  socket"<<std::endl;
+char * ConnectToAgent::readFromSSASocket(int sizeOfMessage){
+	int valRead = 1;
+	char * buffer = (char *)malloc(sizeOfMessage);
+	bzero(buffer, sizeOfMessage);
+	valRead = read(socketFd, buffer, sizeOfMessage);
+	if(valRead >= 0 ){
+		std::cout<<"data read is "<<buffer<<std::endl;
+	}
+	else{
+		std::cout<<"error in reading data "<<std::endl;
+		exit(1);
+	}
 	return buffer;
 }
 
@@ -120,6 +157,8 @@ int ConnectToAgent::writeContentToSSASocket(char * stream, int sizeOfStream){
 	ack = send(socketFd, stream, sizeOfStream, 0);
 	if(ack >= 0)
 		std::cout<<"ConnectToAgent::writeContentToSSASocket content written "<<stream<<std::endl;	
+	else
+		exit(1);
 	return ack;
 
 	

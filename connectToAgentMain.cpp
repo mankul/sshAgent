@@ -9,6 +9,7 @@ int main(){
 	ConnectToAgent connectionToAgent;
 	char * sshAgentPath = "echo $SSH_AUTH_SOCK";
 	bool localServer = false;
+	// bool localServer = true;
 	bool r = 1;
 	if(localServer)
 	{
@@ -25,8 +26,8 @@ int main(){
 	if(r){
 		const char * streamKey = "private key for ssh ";
 		// connectionToAgent.getAddedIdentities();
-		// connectionToAgent.removeAllAddedIdentities();
-		connectionToAgent.removeAllRSAAddedIdentities();
+		connectionToAgent.removeAllAddedIdentities();
+		// connectionToAgent.removeAllRSAAddedIdentities();
 		
 	}
 	return 0;

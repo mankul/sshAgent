@@ -27,6 +27,7 @@ class ConnectToAgent{
 		int8 SSH_AGENTC_ADD_ID_CONSTRAINED = 25;
 		int8 SSH_AGENTC_REMOVE_ALL_IDENTITIES = 19;
 
+		
 		int8 SSH_AGENT_CONSTRAIN_LIFETIME = 1;
 		int8 SSH_AGENT_CONSTRAIN_CONFIRM = 2;
 		int8 SSH_AGENT_CONSTRAIN_EXTENSION = 255;	
@@ -37,13 +38,18 @@ class ConnectToAgent{
 		ConnectToAgent();
 		~ConnectToAgent();
 
+		bool writeInt32ToAgent(int en);
 		bool writeInt8ToAgent(int8 en);
 		bool getAddedIdentities();
 		bool removeAllAddedIdentities();
 		bool removeAllRSAAddedIdentities();
 		bool connectSocket( const char * sockAddr);
 		int writeContentToSSASocket(char * stream, int sizeOfStream);
-		char * readFromSSASocket();
+		bool prepareMessage(int dataLength, char * message);
+		bool readFrom();
+		char * readFromSSASocket(int sizeOfMessage);
+		char * readInt32FromSSASocket();
+		char * readInt8FromSSASocket();
 		void closeConnection();
 };
 
