@@ -7,3 +7,4 @@
 .vscode/configurationCache.log
 .vscode/targets.log
 *.sock
+*.gch

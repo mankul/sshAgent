@@ -38,18 +38,24 @@ class ConnectToAgent{
 		ConnectToAgent();
 		~ConnectToAgent();
 
-		bool writeInt32ToAgent(int en);
-		bool writeInt8ToAgent(int8 en);
 		bool getAddedIdentities();
 		bool removeAllAddedIdentities();
 		bool removeAllRSAAddedIdentities();
 		bool connectSocket( const char * sockAddr);
+		
+		int writeInt32ToAgent(int en);
+		int writeInt8ToAgent(int8 en);
 		int writeContentToSSASocket(char * stream, int sizeOfStream);
-		bool prepareMessage(int dataLength, char * message);
-		bool readFrom();
-		char * readFromSSASocket(int sizeOfMessage);
-		char * readInt32FromSSASocket();
-		char * readInt8FromSSASocket();
+
+		bool prepareMessageAndSend(size_t dataLength, char * message);
+		bool reserveBufferAndSend(size_t messageLength, char * message);
+
+		int readFrom(char * buffer);
+		int readFromSSASocket(size_t sizeOfMessage, char * buffer);
+		int readInt32FromSSASocket(size_t * lengthOfResponse, char * buffer);
+		int readInt8FromSSASocket(char * buffer);
+		int readPacketFromSSASocket(size_t packetLength, char * buffer);
+
 		void closeConnection();
 };
 
