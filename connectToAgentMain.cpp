@@ -10,7 +10,8 @@ int main(){
 	char * sshAgentPath = "echo $SSH_AUTH_SOCK";
 	bool localServer = false;
 	// bool localServer = true;
-	bool r = 1;
+	size_t r = 1000;
+	std::cout<<"string length "<<sizeof(int);//((const char *)(&r))<<std::endl;
 	if(localServer)
 	{
 		const char * pathToServer = SERVER_SOCKET;	

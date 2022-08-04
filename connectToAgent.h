@@ -8,7 +8,7 @@
 #include<cstdint>
 
 typedef const unsigned char int8;
-
+typedef unsigned int int32;
 
 class ConnectToAgent{
 
@@ -47,14 +47,15 @@ class ConnectToAgent{
 		int writeInt8ToAgent(int8 en);
 		int writeContentToSSASocket(char * stream, int sizeOfStream);
 
-		bool prepareMessageAndSend(size_t dataLength, char * message);
-		bool reserveBufferAndSend(size_t messageLength, char * message);
+		bool prepareMessageAndSend(int32 dataLength, char * message);
+		bool reserveBufferAndSend(int32 messageLength, char * message);
 
 		int readFrom(char * buffer);
-		int readFromSSASocket(size_t sizeOfMessage, char * buffer);
-		int readInt32FromSSASocket(size_t * lengthOfResponse, char * buffer);
+		int readFromSSASocket(int32 sizeOfMessage, char * buffer);
+		int readInt32FromSSASocket(int32 * lengthOfResponse, char * buffer);
 		int readInt8FromSSASocket(char * buffer);
-		int readPacketFromSSASocket(size_t packetLength, char * buffer);
+		int readPacketFromSSASocket(int32 packetLength, char * buffer);
+		int readCompletePacket(char * buffer);
 
 		void closeConnection();
 };
