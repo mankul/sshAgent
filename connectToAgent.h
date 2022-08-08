@@ -6,6 +6,9 @@
 #include<sys/socket.h>
 #include<sys/un.h>
 #include<cstdint>
+#include"sshbuffer.h"
+
+
 
 typedef const unsigned char int8;
 typedef unsigned int int32;
@@ -56,6 +59,10 @@ class ConnectToAgent{
 		int readInt8FromSSASocket(char * buffer);
 		int readPacketFromSSASocket(int32 packetLength, char * buffer);
 		int readCompletePacket(char * buffer);
+
+
+		void convertIntToStream(int32 size, char * stream);
+		int32 convertStreamToInt(char * stream);
 
 		void closeConnection();
 };

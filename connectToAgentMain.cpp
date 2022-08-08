@@ -7,7 +7,7 @@ int main(){
 
 
 	ConnectToAgent connectionToAgent;
-	char * sshAgentPath = "echo $SSH_AUTH_SOCK";
+	const char * sshAgentPath = "echo $SSH_AUTH_SOCK";
 	bool localServer = false;
 	// bool localServer = true;
 	size_t r = 1000;

@@ -4,11 +4,9 @@
 #include<stdio.h>
 
 
-
-
 #define CLIENT_SOCKET "client.sock"
 
-#define BUFFER_SIZE 4096
+#define MAX_BUFFER_SIZE 4096
 
 
 struct sshMessage{
@@ -38,12 +36,15 @@ bool ConnectToAgent::getAddedIdentities(){
 	
 	if(ack){
 
+
+		ack = readFrom(buffer);
+
 		// ack = readCompletePacket(buffer); 	
 		// read the length of response packet
-		ack - readInt8FromSSASocket(buffer);
+		// ack = readInt8FromSSASocket(buffer);
 		// std::cout<<ack<<std::endl;
 	
-		ack = readInt32FromSSASocket(&lengthOfResponse, buffer);
+		// ack = readInt32FromSSASocket(&lengthOfResponse, buffer);
 		// // read the packet
 		// free(buffer);
 		// if(ack){
@@ -116,27 +117,38 @@ int ConnectToAgent::writeContentToSSASocket(char * stream, int sizeOfStream){
 	else
 		exit(1);
 	return ack;
-
 	
 }
 
 
 
 bool ConnectToAgent::prepareMessageAndSend(int32 packetSize, char * message){
-	const char * messageLength = (std::to_string(packetSize)).c_str();//(const char *)(&packetSize);
-
+	// const char * messageLength = (std::to_string(packetSize)).c_str();//(const char *)(&packetSize);
+	int size = sizeof (int32) + sizeof (message);
+	char buffer[size];
+	convertIntToStream(packetSize, buffer);
 	int ack = 1;
-	std::cout<<"bool ConnectToAgent::prepareMessageAndSend(int32 packetSize, char * message) messageLength "<<sizeof(messageLength)<<std::endl;
+	std::cout<<"bool ConnectToAgent::prepareMessageAndSend(int32 packetSize, char * message) messageLength "<<size<<std::endl;
+
+
+
+	// strcpy(&buffer[4], message);
+	memcpy(&buffer[4], message, sizeof(message) );
 
 	// send packet size
-	// ack = reserveBufferAndSend(sizeof(packetSize) , (char *)messageLength);
-	if(ack)	{
+
+	ack = reserveBufferAndSend(sizeof(buffer) , buffer);
+
+
+
+
+	std::cout<<"acknowledgement is "<<ack<<std::endl;
+	// if(ack)	{
 		// send packet
-		ack = reserveBufferAndSend(packetSize, message);
-	}
-	else
-		std::cout<<"error in writing message-length to ssh-agent server"<<std::endl;
-	
+		// ack = reserveBufferAndSend(packetSize, message);
+	// }
+	// else
+		// std::cout<<"error in writing message-length to ssh-agent server"<<std::endl;	
 	return ack;
 }
 
@@ -167,23 +179,27 @@ int ConnectToAgent::readInt8FromSSASocket(char * buffer){
 int ConnectToAgent::readInt32FromSSASocket(int32 * lengthOfResponse, char * buffer){
 	int sizeOfMessage = sizeof(int32);
 	int ack;
-	
 	ack = readFromSSASocket(sizeOfMessage, buffer);
 	if(ack){
-		*lengthOfResponse = atoi(buffer);
+		if(buffer != NULL){
+			std::cout<<"readIn32FromSSASocket size of message is "<<std::endl;
+			*lengthOfResponse = convertStreamToInt(buffer);
+		}
 	}
 	else{
 		return 0;
 	}
+	return ack;
 }
 
 
 int ConnectToAgent::readFrom(char * buffer){
-	int ack = readInt8FromSSASocket(buffer);
-	int32 lengthOfResponse;
+	int ack;
+	// ack  = readInt8FromSSASocket(buffer);
+	int32 lengthOfResponse = 0;
 	std::cout<<ack<<std::endl;
 	ack = readInt32FromSSASocket(&lengthOfResponse, buffer);
-	std::cout<<ack<<std::endl;
+	std::cout<<ack<<"length of packet "<<lengthOfResponse<<std::endl;
 	return ack;
 }
 
@@ -192,32 +208,50 @@ int ConnectToAgent::readCompletePacket(char * buffer){
 	free(buffer);
 	buffer = (char *)malloc(sizeof(maxsize));
 	int valRead = read(socketFd, buffer, maxsize);
+	return valRead;
 }
 
 
+void ConnectToAgent::convertIntToStream(int32 size, char * stream){
+	stream[0] = ((size >> 24 ) & 0xff);
+	stream[1] = ((size >> 16 ) & 0xff);
+	stream[2] = ((size >> 8 ) & 0xff);
+	stream[3] = ((size) & 0xff);
+}
 
+int32 ConnectToAgent::convertStreamToInt(char * stream){
+
+	int32 sizeOfPacket= (int32)(stream[0] << 24) | (int32)(stream[1] << 16) | (int32)(stream[2] << 8) | (int32)stream[3] ;
+	return sizeOfPacket;
+
+}
 
 
 int ConnectToAgent::readFromSSASocket(int32 sizeOfMessage, char * buffer){
+
+	std::cout<<"int ConnectToAgent::readFromSSASocket(int32 sizeOfMessage, char * buffer) size of message is "<<sizeOfMessage<<std::endl;
 	int valRead = 1;
-	buffer = (char *)malloc(sizeOfMessage);
+
+	// buffer = (char *)malloc(sizeOfMessage);
+	buffer = (char *)malloc(MAX_BUFFER_SIZE);
+
 	bzero(buffer, sizeOfMessage);
-	valRead = read(socketFd, buffer, sizeOfMessage);
+	// valRead = read(socketFd, buffer, sizeOfMessage);
+	// valRead = recv(socketFd, buffer, sizeOfMessage, 0);
+	valRead = recv(socketFd, buffer, MAX_BUFFER_SIZE, 0);
+
+
+	std::cout<<"val read is "<<valRead<<std::endl;
 	if(valRead >= 0 ){
-		std::cout<<"data read is "<<buffer<<std::endl;
+		for(int i = 0; i < valRead; i ++)
+		std::cout<<"data read is "<<buffer[i]<<std::endl;
 	}
 	else{
 		std::cout<<"error in reading data "<<std::endl;
 		exit(1);
 	}
-	return true;
+	return valRead;
 }
-
-
-
-
-
-
 
 
 
@@ -270,6 +304,7 @@ bool ConnectToAgent::connectSocket(const char * sockAddr){
 }
 
 void ConnectToAgent::closeConnection(){
-	close(clientSocketFd);
+	// close(clientSocketFd);
+	close(socketFd);
 }
 

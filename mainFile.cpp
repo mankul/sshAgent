@@ -1,10 +1,10 @@
 #include"sshAgent.h"
 
 
-int main(){
+// int main(){
 
 
-	SshAgent newSSHAgent;
-	std::string str = newSSHAgent.getPathToSocket();
-	return 0;
-}
+	// SshAgent newSSHAgent;
+	// std::string str = newSSHAgent.getPathToSocket();
+	// return 0;
+// }
